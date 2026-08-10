@@ -80,17 +80,23 @@ export function subscribeUserProgress(
   userId: string,
   onUpdate: (progressMap: Record<string, string[]>) => void
 ) {
-  const userProgressRef = doc(db, 'users', userId, 'progress', 'courses');
-  return onSnapshot(userProgressRef, (docSnap) => {
-    if (docSnap.exists()) {
-      const data = docSnap.data();
-      onUpdate(data.completedChaptersMap || {});
-    } else {
-      onUpdate({});
-    }
-  }, (err) => {
-    console.error("Error subscribing to user progress:", err);
-  });
+  try {
+    const userProgressRef = doc(db, 'users', userId, 'progress', 'courses');
+    return onSnapshot(userProgressRef, (docSnap) => {
+      if (docSnap.metadata.hasPendingWrites) return;
+      if (docSnap.exists()) {
+        const data = docSnap.data();
+        onUpdate(data.completedChaptersMap || {});
+      } else {
+        onUpdate({});
+      }
+    }, (err) => {
+      console.warn("Firestore sync paused for user progress (using local storage fallback):", err?.message || err);
+    });
+  } catch (err) {
+    console.warn("Failed to subscribe user progress:", err);
+    return () => {};
+  }
 }
 
 // Save user progress to Firestore
@@ -104,8 +110,8 @@ export async function saveUserProgressToFirestore(
       completedChaptersMap,
       updatedAt: serverTimestamp()
     }, { merge: true });
-  } catch (err) {
-    console.error("Error saving user progress to Firestore:", err);
+  } catch (err: any) {
+    console.warn("Firestore save paused for user progress (saved locally):", err?.message || err);
   }
 }
 
@@ -114,17 +120,23 @@ export function subscribeUserBookmarks(
   userId: string,
   onUpdate: (bookmarks: any[]) => void
 ) {
-  const bookmarksRef = doc(db, 'users', userId, 'bookmarks', 'items');
-  return onSnapshot(bookmarksRef, (docSnap) => {
-    if (docSnap.exists()) {
-      const data = docSnap.data();
-      onUpdate(data.list || []);
-    } else {
-      onUpdate([]);
-    }
-  }, (err) => {
-    console.error("Error subscribing to user bookmarks:", err);
-  });
+  try {
+    const bookmarksRef = doc(db, 'users', userId, 'bookmarks', 'items');
+    return onSnapshot(bookmarksRef, (docSnap) => {
+      if (docSnap.metadata.hasPendingWrites) return;
+      if (docSnap.exists()) {
+        const data = docSnap.data();
+        onUpdate(data.list || []);
+      } else {
+        onUpdate([]);
+      }
+    }, (err) => {
+      console.warn("Firestore sync paused for user bookmarks (using local storage fallback):", err?.message || err);
+    });
+  } catch (err) {
+    console.warn("Failed to subscribe user bookmarks:", err);
+    return () => {};
+  }
 }
 
 // Save user bookmarks to Firestore
@@ -138,7 +150,7 @@ export async function saveUserBookmarksToFirestore(
       list: bookmarks,
       updatedAt: serverTimestamp()
     }, { merge: true });
-  } catch (err) {
-    console.error("Error saving user bookmarks to Firestore:", err);
+  } catch (err: any) {
+    console.warn("Firestore save paused for user bookmarks (saved locally):", err?.message || err);
   }
 }

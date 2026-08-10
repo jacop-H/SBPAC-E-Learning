@@ -143,10 +143,19 @@ export const Header: React.FC<HeaderProps> = ({
 
           <button
             onClick={() => setDarkMode(!darkMode)}
-            className="p-2 rounded-xl text-neutral-600 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 transition"
-            title="เปลี่ยนธีม มืด/สว่าง"
+            className={`p-2 rounded-xl transition-all duration-200 border flex items-center gap-1.5 ${
+              darkMode
+                ? 'bg-amber-500/15 border-amber-500/40 text-amber-400 hover:bg-amber-500/25'
+                : 'bg-neutral-100 border-neutral-300 text-neutral-700 hover:bg-neutral-200'
+            }`}
+            title={darkMode ? "สลับเป็นโหมดสว่าง (Light Mode)" : "สลับเป็นโหมดมืด (Dark Mode)"}
+            aria-label="เปลี่ยนโหมดธีม มืด/สว่าง"
           >
-            {darkMode ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4 text-neutral-600" />}
+            {darkMode ? (
+              <Sun className="w-4 h-4 text-amber-400" />
+            ) : (
+              <Moon className="w-4 h-4 text-slate-700" />
+            )}
           </button>
         </div>
       </div>

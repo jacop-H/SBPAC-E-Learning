@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { INITIAL_COURSES } from './data/coursesData';
 import { Course, BookmarkItem, ScrapeResult, GoogleUser } from './types';
 import { Header } from './components/Header';
@@ -36,7 +36,17 @@ export default function App() {
   const [selectedCategory, setSelectedCategory] = useState<string>('ทั้งหมด');
   const [searchQuery, setSearchQuery] = useState('');
   const [showSearch, setShowSearch] = useState(false);
-  const [darkMode, setDarkMode] = useState(false);
+  const [darkMode, setDarkMode] = useState<boolean>(() => {
+    try {
+      const saved = localStorage.getItem('sbpac_dark_mode');
+      if (saved !== null) {
+        return JSON.parse(saved);
+      }
+      return window.matchMedia('(prefers-color-scheme: dark)').matches;
+    } catch {
+      return false;
+    }
+  });
 
   // Google User Auth state
   const [currentUser, setCurrentUser] = useState<GoogleUser | null>(() => {
@@ -57,9 +67,11 @@ export default function App() {
 
   // Course completion tracking per Google user
   const [completedChaptersMap, setCompletedChaptersMap] = useState<Record<string, string[]>>({});
+  const lastSyncedProgressRef = useRef<string>('');
 
   // Bookmarks per Google user
   const [bookmarks, setBookmarks] = useState<BookmarkItem[]>([]);
+  const lastSyncedBookmarksRef = useRef<string>('');
 
   // Listen to Firebase Auth state
   useEffect(() => {
@@ -99,10 +111,16 @@ export default function App() {
     // Load from Local Storage as fast fallback
     try {
       const savedProgress = localStorage.getItem(userProgressKey);
-      if (savedProgress) setCompletedChaptersMap(JSON.parse(savedProgress));
+      if (savedProgress) {
+        setCompletedChaptersMap(JSON.parse(savedProgress));
+        lastSyncedProgressRef.current = savedProgress;
+      }
 
       const savedBookmarks = localStorage.getItem(userBookmarksKey);
-      if (savedBookmarks) setBookmarks(JSON.parse(savedBookmarks));
+      if (savedBookmarks) {
+        setBookmarks(JSON.parse(savedBookmarks));
+        lastSyncedBookmarksRef.current = savedBookmarks;
+      }
     } catch (e) {
       console.error(e);
     }
@@ -110,55 +128,73 @@ export default function App() {
     // Subscribe to Firestore for real-time cloud data sync
     const unsubscribeProgress = subscribeUserProgress(currentUser.id, (cloudProgress) => {
       if (cloudProgress && Object.keys(cloudProgress).length > 0) {
+        const str = JSON.stringify(cloudProgress);
+        lastSyncedProgressRef.current = str;
         setCompletedChaptersMap(cloudProgress);
       } else {
         // Seed initial progress for default sample users if empty
+        let initialMap: Record<string, string[]> = {};
         if (currentUser.email === 'somchai.sbpac@gmail.com') {
-          setCompletedChaptersMap({
+          initialMap = {
             'law-sbp': ['law-c1', 'law-c2'],
             'malay-basic': ['malay-c1', 'malay-c2', 'malay-c3']
-          });
+          };
         } else if (currentUser.email === 'areeya.ocsc@gmail.com') {
-          setCompletedChaptersMap({
+          initialMap = {
             'law-sbp': ['law-c1', 'law-c2', 'law-c3', 'law-c4', 'law-c5'],
             'multiculture': ['mc1', 'mc2'],
             'history-sbp': ['h1']
-          });
+          };
         }
+        const str = JSON.stringify(initialMap);
+        lastSyncedProgressRef.current = str;
+        setCompletedChaptersMap(initialMap);
       }
     });
 
     const unsubscribeBookmarks = subscribeUserBookmarks(currentUser.id, (cloudBookmarks) => {
       if (cloudBookmarks && cloudBookmarks.length > 0) {
+        const str = JSON.stringify(cloudBookmarks);
+        lastSyncedBookmarksRef.current = str;
         setBookmarks(cloudBookmarks);
       }
     });
 
     return () => {
-      unsubscribeProgress();
-      unsubscribeBookmarks();
+      if (typeof unsubscribeProgress === 'function') unsubscribeProgress();
+      if (typeof unsubscribeBookmarks === 'function') unsubscribeBookmarks();
     };
   }, [currentUser?.id, currentUser?.email]);
 
   // Save progress when completedChaptersMap updates (LocalStorage + Firestore Database)
   useEffect(() => {
     if (!currentUser) return;
+    const currentStr = JSON.stringify(completedChaptersMap);
     try {
-      localStorage.setItem(userProgressKey, JSON.stringify(completedChaptersMap));
-      saveUserProgressToFirestore(currentUser.id, completedChaptersMap);
+      localStorage.setItem(userProgressKey, currentStr);
     } catch (e) {
       console.error(e);
+    }
+
+    if (currentStr !== lastSyncedProgressRef.current) {
+      lastSyncedProgressRef.current = currentStr;
+      saveUserProgressToFirestore(currentUser.id, completedChaptersMap);
     }
   }, [completedChaptersMap, userProgressKey, currentUser?.id]);
 
   // Save bookmarks when bookmarks update (LocalStorage + Firestore Database)
   useEffect(() => {
     if (!currentUser) return;
+    const currentStr = JSON.stringify(bookmarks);
     try {
-      localStorage.setItem(userBookmarksKey, JSON.stringify(bookmarks));
-      saveUserBookmarksToFirestore(currentUser.id, bookmarks);
+      localStorage.setItem(userBookmarksKey, currentStr);
     } catch (e) {
       console.error(e);
+    }
+
+    if (currentStr !== lastSyncedBookmarksRef.current) {
+      lastSyncedBookmarksRef.current = currentStr;
+      saveUserBookmarksToFirestore(currentUser.id, bookmarks);
     }
   }, [bookmarks, userBookmarksKey, currentUser?.id]);
 
@@ -173,11 +209,17 @@ export default function App() {
     }
   }, [currentUser]);
 
-  // Select user callback
+  // Select user callback (keeps modal open with logged-in user state until user clicks "เข้าสู่ห้องเรียน")
   const handleSelectGoogleUser = (user: GoogleUser) => {
     setCurrentUser(user);
-    setShowGoogleModal(false);
+  };
+
+  // Direct entry into classroom for returning user
+  const handleEnterClassroom = () => {
     setShowLanding(false);
+    setActiveTab('courses');
+    setShowGoogleModal(false);
+    setSelectedCourse(null);
   };
 
   // Logout request callback (triggers confirmation popup)
@@ -226,10 +268,16 @@ export default function App() {
 
   // Sync dark mode class
   useEffect(() => {
+    const root = document.documentElement;
     if (darkMode) {
-      document.documentElement.classList.add('dark');
+      root.classList.add('dark');
     } else {
-      document.documentElement.classList.remove('dark');
+      root.classList.remove('dark');
+    }
+    try {
+      localStorage.setItem('sbpac_dark_mode', JSON.stringify(darkMode));
+    } catch (e) {
+      console.error(e);
     }
   }, [darkMode]);
 
@@ -362,7 +410,7 @@ export default function App() {
     return (
       <>
         <LandingPage
-          onStart={() => setShowLanding(false)}
+          onStart={handleEnterClassroom}
           currentUser={currentUser}
           onOpenLoginModal={() => setShowGoogleModal(true)}
         />
@@ -372,6 +420,7 @@ export default function App() {
           onSelectUser={handleSelectGoogleUser}
           currentUser={currentUser}
           onLogout={handleRequestLogout}
+          onEnterClassroom={handleEnterClassroom}
         />
       </>
     );
@@ -543,6 +592,7 @@ export default function App() {
           onSelectUser={handleSelectGoogleUser}
           currentUser={currentUser}
           onLogout={handleRequestLogout}
+          onEnterClassroom={handleEnterClassroom}
         />
 
         {/* Logout Confirmation Modal */}
