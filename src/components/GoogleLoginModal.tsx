@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { GoogleUser } from '../types';
-import { LogIn, LogOut, CheckCircle2, Sparkles, ShieldCheck, Mail, ArrowRight } from 'lucide-react';
+import { LogIn, LogOut, CheckCircle2, Sparkles, ShieldCheck, Mail, ArrowRight, AlertTriangle } from 'lucide-react';
 import { signInWithGoogle } from '../lib/firebase';
 
 interface GoogleLoginModalProps {
@@ -19,6 +19,7 @@ export const GoogleLoginModal: React.FC<GoogleLoginModalProps> = ({
   onLogout
 }) => {
   const [loadingFirebase, setLoadingFirebase] = useState(false);
+  const [domainError, setDomainError] = useState<string | null>(null);
   const [showEmailInput, setShowEmailInput] = useState(false);
   const [customEmail, setCustomEmail] = useState('');
   const [customName, setCustomName] = useState('');
@@ -27,13 +28,20 @@ export const GoogleLoginModal: React.FC<GoogleLoginModalProps> = ({
 
   const handleFirebaseGoogleSignIn = async () => {
     setLoadingFirebase(true);
+    setDomainError(null);
     try {
       const user = await signInWithGoogle();
       onSelectUser(user);
     } catch (err: any) {
       if (err?.code !== 'auth/popup-closed-by-user' && err?.code !== 'auth/cancelled-popup-request') {
         console.error("Firebase Google Auth error:", err);
-        alert('เกิดข้อผิดพลาดในการล็อกอินด้วย Google: ' + (err?.message || ''));
+        if (err?.code === 'auth/unauthorized-domain') {
+          const currentDomain = window.location.hostname;
+          setDomainError(currentDomain);
+          setShowEmailInput(true);
+        } else {
+          alert('เกิดข้อผิดพลาดในการล็อกอินด้วย Google: ' + (err?.message || ''));
+        }
       }
     } finally {
       setLoadingFirebase(false);
@@ -165,6 +173,27 @@ export const GoogleLoginModal: React.FC<GoogleLoginModalProps> = ({
           ) : (
             /* Logged Out View - Single Clear Login Button */
             <div className="space-y-4">
+              {domainError && (
+                <div className="p-3.5 bg-amber-500/15 border border-amber-500/40 rounded-2xl text-xs space-y-2 text-amber-900 dark:text-amber-200 animate-fadeIn">
+                  <div className="flex items-center gap-2 font-bold text-amber-600 dark:text-amber-400">
+                    <AlertTriangle className="w-4 h-4 shrink-0 text-amber-500" />
+                    <span>แจ้งเตือน Authorized Domain (Firebase)</span>
+                  </div>
+                  <p className="text-[11px] leading-relaxed text-slate-700 dark:text-slate-300">
+                    โดเมน <code className="bg-amber-500/20 px-1 py-0.5 rounded font-mono font-semibold">{domainError}</code> ยังไม่ได้รับการลงทะเบียนใน Firebase Console
+                  </p>
+                  <div className="text-[10px] bg-slate-900/80 text-slate-200 p-2.5 rounded-xl font-mono leading-tight space-y-1">
+                    <p className="text-amber-400 font-sans font-bold">วิธีแก้ไขใน Firebase Console:</p>
+                    <p>1. ไปที่ Firebase Console → Authentication → Settings</p>
+                    <p>2. หัวข้อ "Authorized domains" กด [Add domain]</p>
+                    <p>3. ใส่ <span className="text-emerald-400">{domainError}</span> แล้วกด Save</p>
+                  </div>
+                  <p className="text-[11px] font-bold text-emerald-600 dark:text-emerald-400">
+                    ✓ คุณสามารถป้อน Google Email เข้าใช้งานได้ทันทีด้านล่าง:
+                  </p>
+                </div>
+              )}
+
               {/* SINGLE GOOGLE LOGIN BUTTON */}
               <button
                 onClick={handleFirebaseGoogleSignIn}
