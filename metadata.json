@@ -1,0 +1,6 @@
+{
+  "name": "SBPAC E-LEARNING Mobile",
+  "description": "Mobile application for SBPAC E-LEARNING and OCSC Learning Portal courses focused on Southern Border Provinces.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

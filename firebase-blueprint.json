@@ -1,0 +1,42 @@
+{
+  "entities": {
+    "users": {
+      "title": "Users",
+      "description": "User profiles authenticated via Firebase Auth",
+      "type": "document",
+      "fields": {
+        "uid": { "type": "string", "description": "Firebase Auth UID" },
+        "email": { "type": "string", "description": "Google Email" },
+        "displayName": { "type": "string", "description": "Full Name" },
+        "photoURL": { "type": "string", "description": "Google Profile Picture" },
+        "createdAt": { "type": "timestamp", "description": "Account created timestamp" },
+        "updatedAt": { "type": "timestamp", "description": "Last login timestamp" }
+      }
+    },
+    "userProgress": {
+      "title": "User Progress",
+      "description": "Course progress for each user",
+      "type": "subcollection",
+      "parent": "users",
+      "fields": {
+        "courseId": { "type": "string", "description": "Course ID" },
+        "completedChapterIds": { "type": "array", "description": "List of completed chapter IDs" },
+        "updatedAt": { "type": "timestamp", "description": "Last updated timestamp" }
+      }
+    },
+    "userBookmarks": {
+      "title": "User Bookmarks",
+      "description": "Saved bookmarks for each user",
+      "type": "subcollection",
+      "parent": "users",
+      "fields": {
+        "id": { "type": "string", "description": "Bookmark ID" },
+        "courseId": { "type": "string", "description": "Course ID" },
+        "courseTitle": { "type": "string", "description": "Course Title" },
+        "chapterId": { "type": "string", "description": "Chapter ID" },
+        "chapterTitle": { "type": "string", "description": "Chapter Title" },
+        "createdAt": { "type": "timestamp", "description": "Created timestamp" }
+      }
+    }
+  }
+}
