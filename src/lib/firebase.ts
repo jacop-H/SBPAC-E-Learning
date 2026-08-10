@@ -18,8 +18,13 @@ import {
 import firebaseConfig from '../../firebase-applet-config.json';
 import { GoogleUser } from '../types';
 
+const activeFirebaseConfig = {
+  ...firebaseConfig,
+  authDomain: 'sbpac-e-learning.firebaseapp.com'
+};
+
 // Initialize Firebase App
-const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
+const app = !getApps().length ? initializeApp(activeFirebaseConfig) : getApp();
 
 // Initialize Auth & Google Provider
 export const auth = getAuth(app);
