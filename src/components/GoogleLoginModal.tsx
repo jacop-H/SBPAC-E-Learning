@@ -20,6 +20,7 @@ export const GoogleLoginModal: React.FC<GoogleLoginModalProps> = ({
 }) => {
   const [loadingFirebase, setLoadingFirebase] = useState(false);
   const [domainError, setDomainError] = useState<string | null>(null);
+  const [authErrorMessage, setAuthErrorMessage] = useState<string | null>(null);
   const [showEmailInput, setShowEmailInput] = useState(false);
   const [customEmail, setCustomEmail] = useState('');
   const [customName, setCustomName] = useState('');
@@ -29,6 +30,7 @@ export const GoogleLoginModal: React.FC<GoogleLoginModalProps> = ({
   const handleFirebaseGoogleSignIn = async () => {
     setLoadingFirebase(true);
     setDomainError(null);
+    setAuthErrorMessage(null);
     try {
       const user = await signInWithGoogle();
       onSelectUser(user);
@@ -40,7 +42,8 @@ export const GoogleLoginModal: React.FC<GoogleLoginModalProps> = ({
           setDomainError(currentDomain);
           setShowEmailInput(true);
         } else {
-          alert('เกิดข้อผิดพลาดในการล็อกอินด้วย Google: ' + (err?.message || ''));
+          setAuthErrorMessage(err?.message || 'ไม่สามารถเข้าสู่ระบบด้วย Google Auth ได้ในขณะนี้ โปรดลองอีกครั้งหรือใช้การป้อน Email ด้านล่าง');
+          setShowEmailInput(true);
         }
       }
     } finally {
@@ -191,6 +194,16 @@ export const GoogleLoginModal: React.FC<GoogleLoginModalProps> = ({
                   <p className="text-[11px] font-bold text-emerald-600 dark:text-emerald-400">
                     ✓ คุณสามารถป้อน Google Email เข้าใช้งานได้ทันทีด้านล่าง:
                   </p>
+                </div>
+              )}
+
+              {authErrorMessage && !domainError && (
+                <div className="p-3 bg-rose-500/10 border border-rose-500/30 rounded-2xl text-xs space-y-1 text-rose-700 dark:text-rose-300 animate-fadeIn">
+                  <div className="flex items-center gap-2 font-bold text-rose-600 dark:text-rose-400">
+                    <AlertTriangle className="w-4 h-4 shrink-0 text-rose-500" />
+                    <span>เกิดข้อผิดพลาดในการเชื่อมต่อ Google Auth</span>
+                  </div>
+                  <p className="text-[11px] leading-relaxed">{authErrorMessage}</p>
                 </div>
               )}
 
