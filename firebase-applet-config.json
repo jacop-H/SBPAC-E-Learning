@@ -1,12 +1,12 @@
 {
-  "projectId": "utility-imprint-8xctm",
-  "appId": "1:1051295801603:web:1b36bdad26d455308c0936",
-  "apiKey": "AIzaSyCHFj4Q_7Nuk4GJgKfHNT-LQXzrrAmfCmw",
+  "projectId": "sbpac-e-learning",
+  "appId": "1:502898050641:web:584f2d75757afce63a9a70",
+  "apiKey": "AIzaSyAf5id9iIJPNI4NDZLWUHwfSF2CmwNeaPk",
   "authDomain": "sbpac-e-learning.firebaseapp.com",
   "firestoreDatabaseId": "ai-studio-sbpacelearningmo-a6ea09b3-d289-4e1b-9108-1f54efc613c6",
-  "storageBucket": "utility-imprint-8xctm.firebasestorage.app",
-  "messagingSenderId": "1051295801603",
+  "storageBucket": "sbpac-e-learning.firebasestorage.app",
+  "messagingSenderId": "502898050641",
   "measurementId": "",
-  "oAuthClientId": "1051295801603-brakfkcq0ui0qmg246rpjpucb2grhm4j.apps.googleusercontent.com",
+  "oAuthClientId": "502898050641-4ukulsh3vcepl6c3rdq2fugojmq1mral.apps.googleusercontent.com",
   "recaptchaSiteKey": ""
 }
