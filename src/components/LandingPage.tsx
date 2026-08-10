@@ -148,10 +148,13 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onStart, currentUser, 
 
       {/* Footer Info */}
       <div className="relative z-10 pb-6 px-4 text-center">
-        <p className="text-[11px] text-slate-400/80 flex items-center justify-center gap-1">
-          <Sparkles className="w-3 h-3 text-amber-400" />
-          <span>ระบบศูนย์เรียนรู้อิเล็กทรอนิกส์ SBPAC E-Learning</span>
-        </p>
+        <div className="text-[11px] text-slate-400/80 flex flex-col items-center justify-center gap-0.5">
+          <div className="flex items-center gap-1.5 font-medium text-slate-300">
+            <Sparkles className="w-3 h-3 text-amber-400 shrink-0" />
+            <span>สถาบันพัฒนาเจ้าหน้าที่ของรัฐฝ่ายพลเรือนจังหวัดชายแดนภาคใต้</span>
+          </div>
+          <p className="text-slate-400">ระบบศูนย์เรียนรู้อิเล็กทรอนิกส์ SBPAC E-Learning</p>
+        </div>
       </div>
     </div>
   );
