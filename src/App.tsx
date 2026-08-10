@@ -11,6 +11,7 @@ import { BookmarksView } from './components/BookmarksView';
 import { LiveRefreshModal } from './components/LiveRefreshModal';
 import { LandingPage } from './components/LandingPage';
 import { GoogleLoginModal } from './components/GoogleLoginModal';
+import { LogoutConfirmModal } from './components/LogoutModal';
 import { Shield, Sparkles, Filter, RefreshCw, BookOpen, ChevronRight, Layers, UserCheck } from 'lucide-react';
 import {
   auth,
@@ -23,7 +24,13 @@ import {
 import { onAuthStateChanged } from 'firebase/auth';
 
 export default function App() {
-  const [showLanding, setShowLanding] = useState(true);
+  const [showLanding, setShowLanding] = useState(() => {
+    try {
+      return !localStorage.getItem('sbpac_google_user');
+    } catch {
+      return true;
+    }
+  });
   const [activeTab, setActiveTab] = useState<NavTab>('courses');
   const [selectedCourse, setSelectedCourse] = useState<Course | null>(null);
   const [selectedCategory, setSelectedCategory] = useState<string>('ทั้งหมด');
@@ -42,6 +49,7 @@ export default function App() {
   });
 
   const [showGoogleModal, setShowGoogleModal] = useState(false);
+  const [showLogoutConfirmModal, setShowLogoutConfirmModal] = useState(false);
 
   // Dynamic user progress keys
   const userProgressKey = currentUser ? `sbpac_progress_${currentUser.email}` : 'sbpac_completed_chapters_default';
@@ -66,6 +74,19 @@ export default function App() {
           department: 'ศูนย์เรียนรู้ระบบ SBPAC E-Learning'
         };
         setCurrentUser(userObj);
+        setShowLanding(false);
+        try {
+          localStorage.setItem('sbpac_google_user', JSON.stringify(userObj));
+        } catch (e) {
+          console.error(e);
+        }
+      } else {
+        setCurrentUser(null);
+        try {
+          localStorage.removeItem('sbpac_google_user');
+        } catch (e) {
+          console.error(e);
+        }
       }
     });
     return () => unsubscribeAuth();
@@ -159,14 +180,26 @@ export default function App() {
     setShowLanding(false);
   };
 
-  // Logout callback
-  const handleLogout = async () => {
+  // Logout request callback (triggers confirmation popup)
+  const handleRequestLogout = () => {
+    setShowLogoutConfirmModal(true);
+  };
+
+  // Perform actual logout after user confirms in popup
+  const handleConfirmLogout = async () => {
+    setShowLogoutConfirmModal(false);
+    setShowGoogleModal(false);
     try {
       await logoutFirebase();
     } catch (e) {
       console.error("Firebase logout error:", e);
     }
     setCurrentUser(null);
+    setCompletedChaptersMap({});
+    setBookmarks([]);
+    setShowLanding(true);
+    setSelectedCourse(null);
+    setActiveTab('courses');
     try {
       localStorage.removeItem('sbpac_google_user');
     } catch (e) {
@@ -338,7 +371,7 @@ export default function App() {
           onClose={() => setShowGoogleModal(false)}
           onSelectUser={handleSelectGoogleUser}
           currentUser={currentUser}
-          onLogout={handleLogout}
+          onLogout={handleRequestLogout}
         />
       </>
     );
@@ -368,7 +401,7 @@ export default function App() {
           onGoLanding={() => setShowLanding(true)}
           currentUser={currentUser}
           onOpenLoginModal={() => setShowGoogleModal(true)}
-          onLogout={handleLogout}
+          onLogout={handleRequestLogout}
         />
 
         {/* Main Body depending on Tab */}
@@ -509,7 +542,15 @@ export default function App() {
           onClose={() => setShowGoogleModal(false)}
           onSelectUser={handleSelectGoogleUser}
           currentUser={currentUser}
-          onLogout={handleLogout}
+          onLogout={handleRequestLogout}
+        />
+
+        {/* Logout Confirmation Modal */}
+        <LogoutConfirmModal
+          isOpen={showLogoutConfirmModal}
+          currentUser={currentUser}
+          onConfirm={handleConfirmLogout}
+          onClose={() => setShowLogoutConfirmModal(false)}
         />
       </div>
     </div>

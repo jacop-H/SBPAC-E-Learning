@@ -224,12 +224,6 @@ export const GoogleLoginModal: React.FC<GoogleLoginModalProps> = ({
                 <span>{loadingFirebase ? 'กำลังเข้าสู่ระบบ Google...' : 'เข้าสู่ระบบด้วย Google Account'}</span>
               </button>
 
-              <div className="text-center">
-                <p className="text-[11px] text-slate-500 dark:text-slate-400">
-                  ระบบจะเปิดหน้าต่าง Google Pop-up ยืนยันตัวตนเพื่อเข้าสู่ระบบ
-                </p>
-              </div>
-
               {!showEmailInput ? (
                 <div className="pt-2 text-center">
                   <button

@@ -150,7 +150,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onStart, currentUser, 
       <div className="relative z-10 pb-6 px-4 text-center">
         <p className="text-[11px] text-slate-400/80 flex items-center justify-center gap-1">
           <Sparkles className="w-3 h-3 text-amber-400" />
-          <span>เชื่อมโยงข้อมูลกับระบบ OCSC Learning Portal (สำนักงาน ก.พ.)</span>
+          <span>ระบบศูนย์เรียนรู้อิเล็กทรอนิกส์ SBPAC E-Learning</span>
         </p>
       </div>
     </div>
