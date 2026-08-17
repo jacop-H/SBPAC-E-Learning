@@ -143,11 +143,11 @@ export const GoogleLoginModal: React.FC<GoogleLoginModalProps> = ({
                 </div>
 
                 <h3 className="text-xl font-extrabold text-slate-900 dark:text-white leading-tight">
-                  ยินดีต้อนรับ <span className="text-amber-600 dark:text-amber-400">{currentUser.name}</span>
+                  สวัสดี <span className="text-amber-600 dark:text-amber-400">{currentUser.name}</span>
                 </h3>
 
                 <p className="text-sm font-semibold text-slate-700 dark:text-slate-200">
-                  ขอต้อนรับการกลับเข้าสู่ห้องเรียนอีกครั้ง
+                  ยินดีต้อนรับเข้าสู่ห้องเรียนอีกครั้ง
                 </p>
 
                 <p className="text-xs text-slate-400 font-mono">
